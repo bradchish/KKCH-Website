@@ -11,24 +11,135 @@
   }
 
   /* ---------- Scroll reveal ---------- */
+  var REVEAL =
+    '.section-head, .trio article, .day, .ladder-title, .ladder, .ladder-note, .fees-wrap, .extras, ' +
+    '.visit > div, .trial-form, .about-facts, .about-text, .gallery figure, .page-cta, .card, .where, footer .osu';
+
   function setupReveal() {
-    if (!canObserve) return;
-    var targets = document.querySelectorAll(
-      '.section-head, .trio article, .day, .ladder-title, .ladder, .ladder-note, .fees-wrap, .extras, ' +
-      '.visit > div, .trial-form, .about-facts, .about-text, .gallery figure, .page-cta, .card, .where'
-    );
+    if (!canObserve || reduce) return;
+    var targets = Array.prototype.slice.call(document.querySelectorAll(REVEAL));
+
+    function settle(el) {
+      // Once the entrance is done, hand the element back to its normal styles so hover effects work again.
+      el.classList.remove('reveal');
+      el.style.transitionDelay = '';
+    }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        if (!e.isIntersecting) return;
+        var el = e.target;
+        io.unobserve(el);
+        el.classList.add('in');
+        runCounters(el);
+        var done = false;
+        function finish() { if (!done) { done = true; settle(el); } }
+        el.addEventListener('transitionend', function te(ev) {
+          if (ev.target === el && ev.propertyName === 'opacity') { el.removeEventListener('transitionend', te); finish(); }
+        });
+        setTimeout(finish, 1600);
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
     targets.forEach(function (el) {
-      var siblings = el.parentElement ? Array.prototype.slice.call(el.parentElement.children).filter(function (c) { return c.classList.contains(el.classList[0]); }) : [];
+      // Stagger siblings that are revealed together (the three training cards, the two class days, photos...).
+      var siblings = el.parentElement ? Array.prototype.filter.call(el.parentElement.children, function (c) { return targets.indexOf(c) !== -1; }) : [];
       var i = Math.max(0, siblings.indexOf(el));
-      if (!reduce) el.style.transitionDelay = Math.min(i, 5) * 80 + 'ms';
+      el.style.transitionDelay = Math.min(i, 5) * 90 + 'ms';
+      // Children that animate in sequence once their parent is revealed (belts, instructor facts).
+      Array.prototype.forEach.call(el.querySelectorAll('.ladder > li, .about-facts > div'), function (c, n) {
+        c.style.setProperty('--i', n);
+      });
       el.classList.add('reveal');
       io.observe(el);
     });
+  }
+
+  /* ---------- Section rules draw across as each section arrives ---------- */
+  function setupRules() {
+    if (!canObserve || reduce) return;
+    var sections = document.querySelectorAll('main section');
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('drawn'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -12% 0px' });
+    Array.prototype.forEach.call(sections, function (s) { s.classList.add('rule-draw'); io.observe(s); });
+  }
+
+  /* ---------- Prices count up when they scroll into view ---------- */
+  function prepCounters() {
+    if (!canObserve || reduce) return;
+    Array.prototype.forEach.call(document.querySelectorAll('.fees-wrap td, .extras dd'), function (cell) {
+      var node = cell.firstChild;
+      if (!node || node.nodeType !== 3) return;
+      var m = /^\s*\$(\d+)/.exec(node.nodeValue);
+      if (!m) return;
+      var span = document.createElement('span');
+      span.className = 'count';
+      span.setAttribute('data-to', m[1]);
+      span.textContent = '$' + m[1];
+      node.nodeValue = node.nodeValue.replace(/^\s*\$\d+/, '');
+      cell.insertBefore(span, node);
+    });
+  }
+  function runCounters(scope) {
+    var spans = scope.querySelectorAll('.count[data-to]');
+    if (!spans.length) return;
+    var t0 = null, dur = 900;
+    Array.prototype.forEach.call(spans, function (s) { s.textContent = '$0'; });
+    function tick(t) {
+      if (t0 === null) t0 = t;
+      var k = Math.min(1, (t - t0) / dur);
+      var ease = 1 - Math.pow(1 - k, 3);
+      Array.prototype.forEach.call(spans, function (s) {
+        s.textContent = '$' + Math.round(+s.getAttribute('data-to') * ease);
+      });
+      if (k < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- Scroll progress bar and hero parallax ---------- */
+  function setupScrollFx() {
+    if (reduce) return;
+    var bar = document.createElement('div');
+    bar.className = 'scroll-progress';
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(bar);
+
+    var hero = document.querySelector('.hero');
+    var kanji = hero && hero.querySelector('.kanji');
+    var caption = hero && hero.querySelector('.kanji-caption');
+    var wide = window.matchMedia ? window.matchMedia('(min-width: 861px)') : { matches: true };
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var y = window.pageYOffset || document.documentElement.scrollTop;
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      var p = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0;
+      bar.style.transform = 'scaleX(' + p + ')';
+      bar.style.opacity = max > 0 && y > 4 ? '1' : '0';
+
+      if (kanji && caption) {
+        if (wide.matches) {
+          var h = hero.offsetHeight || 1;
+          var shift = Math.min(y, h) * 0.28;
+          var fade = 1 - Math.min(1, y / h) * 0.65;
+          kanji.style.translate = '0 ' + shift.toFixed(1) + 'px';
+          // filter rather than opacity, so it does not fight the hero's load-in animation.
+          kanji.style.filter = 'opacity(' + fade.toFixed(3) + ')';
+          caption.style.translate = '0 ' + (shift * 0.6).toFixed(1) + 'px';
+          caption.style.filter = 'opacity(' + fade.toFixed(3) + ')';
+        } else {
+          kanji.style.translate = kanji.style.filter = caption.style.translate = caption.style.filter = '';
+        }
+      }
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
   }
 
   /* ---------- Photo viewer ---------- */
@@ -114,5 +225,5 @@
     }, { passive: true });
   }
 
-  ready(function () { setupReveal(); setupViewer(); });
+  ready(function () { prepCounters(); setupReveal(); setupRules(); setupScrollFx(); setupViewer(); });
 })();
