@@ -200,7 +200,7 @@
   .ladder-note { margin-top: 24px; color: var(--muted); }
   .ladder-title { font-size: 2rem; margin-bottom: 20px; }
   .junior-title { margin-top: 56px; }
-  .ladder.junior { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .ladder.junior { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .ladder.junior .tape {
     background: linear-gradient(var(--c), var(--c)) center / 100% 8px no-repeat, var(--base, var(--belt-white));
   }
@@ -322,3 +322,50 @@
   nav a[aria-current="page"] { border-bottom-color: var(--accent); }
   .page-cta { margin-top: 40px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding-top: 32px; border-top: 1px solid var(--rule); }
   .page-cta p { margin: 0; color: var(--muted); }
+
+  /* ---------- Motion ---------- */
+  /* Hover polish. Only on devices that really hover, so phones do not get stuck states. */
+  .btn, nav a, .day, .trio article, .card, .gallery img, .ladder .tape { transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+  @media (hover: hover) {
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); }
+    .day:hover, .card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); }
+    .trio article:hover { background: var(--surface); }
+    .ladder li:hover .tape { transform: scaleY(1.5); }
+  }
+
+  /* Hero entrance, played once on load. */
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+    @keyframes settle { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+    .hero .eyebrow { animation: rise 0.7s ease both; }
+    .hero h1 { animation: rise 0.8s 0.1s ease both; }
+    .hero .lede { animation: rise 0.8s 0.25s ease both; }
+    .hero .actions { animation: rise 0.8s 0.4s ease both; }
+    .hero .kanji { animation: settle 1s 0.2s ease both; }
+    .hero .kanji-caption { animation: rise 0.8s 0.6s ease both; }
+  }
+
+  /* Scroll reveal. Elements are only hidden once site.js has run and tagged them. */
+  .js .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .js .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal { opacity: 1; transform: none; transition: none; }
+    .btn, nav a, .day, .trio article, .card, .gallery img, .ladder .tape { transition: none; }
+    .btn:hover, .day:hover, .card:hover, .ladder li:hover .tape { transform: none; }
+  }
+
+  /* Photo gallery: zoom on hover and a full-screen viewer. */
+  .gallery figure { overflow: hidden; }
+  .zoom { display: block; width: 100%; padding: 0; margin: 0; border: 0; background: none; cursor: zoom-in; overflow: hidden; }
+  @media (hover: hover) { .zoom:hover img { transform: scale(1.04); } }
+  .lb { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; gap: 12px; padding: 56px 16px 20px; background: rgba(5, 8, 10, 0.93); opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s; }
+  .lb.open { opacity: 1; visibility: visible; }
+  .lb img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border: 0; transition: opacity 0.2s ease; }
+  .lb img.swap { opacity: 0; }
+  .lb-cap { color: #D5DCE2; font-size: 0.95rem; text-align: center; min-height: 1.5em; }
+  .lb button { position: absolute; width: 48px; height: 48px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #fff; font: inherit; font-size: 1.6rem; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+  .lb button:hover { background: rgba(255, 255, 255, 0.28); }
+  .lb-close { top: 8px; right: 8px; }
+  .lb-prev { left: 8px; top: 50%; transform: translateY(-50%); }
+  .lb-next { right: 8px; top: 50%; transform: translateY(-50%); }
+  @media (prefers-reduced-motion: reduce) { .lb, .lb img { transition: none; } }

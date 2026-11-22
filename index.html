@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Archivo:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&text=%E6%A5%B5%E7%9C%9F&display=swap">
 <link rel="stylesheet" href="style.css">
+<script src="site.js"></script>
 </head>
 <body>
 <header class="bar">
@@ -161,7 +162,7 @@
     <div class="wrap">
       <div class="section-head">
         <h2>The belt path</h2>
-        <p>MOKKA uses two belt systems. Adults wear solid belts. Juniors wear a belt with a coloured stripe and move up in smaller steps.</p>
+        <p>MOKKA uses two belt systems. Adults wear solid belts. Juniors start on a white belt, then wear belts with a coloured stripe and move up in smaller steps.</p>
       </div>
       <h3 class="ladder-title">Adults</h3>
       <ol class="ladder" aria-label="Adult belt order from white to black">
@@ -176,7 +177,8 @@
       <p class="ladder-note">Black belt is where the dan grades begin, not the end of training.</p>
 
       <h3 class="ladder-title junior-title">Juniors</h3>
-      <ol class="ladder junior" aria-label="Junior belt order from orange to junior black belt">
+      <ol class="ladder junior" aria-label="Junior belt order from white to junior black belt">
+        <li style="--c: var(--belt-white)"><span class="tape"></span><span class="name">White</span><span class="detail">Starting belt</span></li>
         <li style="--c: var(--belt-orange)"><span class="tape"></span><span class="name">Orange</span><span class="detail">3 levels (10th kyu), then 9th kyu</span></li>
         <li style="--c: var(--belt-blue)"><span class="tape"></span><span class="name">Blue</span><span class="detail">3 levels (8th kyu), then 7th kyu</span></li>
         <li style="--c: var(--belt-yellow)"><span class="tape"></span><span class="name">Yellow</span><span class="detail">3 levels (6th kyu), then 5th kyu</span></li>
